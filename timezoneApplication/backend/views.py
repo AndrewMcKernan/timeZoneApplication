@@ -46,3 +46,6 @@ class TimezoneViewSet(viewsets.ViewSet):
         timezone = get_object_or_404(Timezone, pk=pk)
         timezone.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        
+# TODO: create views for account creation (not sure how much is handled by the django_rest_framework
