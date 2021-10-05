@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 
 class TimezoneViewSet(viewsets.ViewSet):
 
-    permission_classes = [SessionAuthentication]
+    authentication_classes = [SessionAuthentication]
 
     def list(self, request):
         timezones = Timezone.objects.all()
