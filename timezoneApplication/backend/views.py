@@ -16,6 +16,7 @@ class TimezoneViewSet(viewsets.ViewSet):
     authentication_classes = [SessionAuthentication]
 
     def list(self, request):
+        # TODO: list either only the timezones we own, or all of them, depending on permissions
         timezones = Timezone.objects.all()
         serializer = TimezoneSerializer(timezones, many=True)
         return Response(serializer.data)
@@ -34,7 +35,8 @@ class TimezoneViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, pk=None):
-        serializer = TimezoneSerializer(get_object_or_404(Timezone))
+        serializer = TimezoneSerializer(get_object_or_404(Timezone, pk=pk), data=request.data)
+        # TODO: ensure that user is the same as current user on the record, changing the author is not supported.
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.errors, status=status.HTTP_200_OK)
@@ -48,9 +50,6 @@ class TimezoneViewSet(viewsets.ViewSet):
         timezone = get_object_or_404(Timezone, pk=pk)
         timezone.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
-        
-# TODO: create views for account creation (not sure how much is handled by the django_rest_framework
 
 @api_view(['POST'])
 def login_view(request):
@@ -61,3 +60,5 @@ def login_view(request):
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+            
+# TODO: create account creation, logout, and permission modifification functions

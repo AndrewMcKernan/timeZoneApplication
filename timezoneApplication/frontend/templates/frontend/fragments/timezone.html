@@ -1,8 +1,16 @@
     <div>
         <form method="post" action="#">
-        
+            
 			<div class="row gtr-uniform">
 				<div class="col-12">
+                    <button onclick="switchView('timezones-section')">Back</button>
+                </div>
+                <input readonly type="text" style="display:none;" name="entry-id" id="entry-id" value="" />
+                <input readonly type="text" style="display:none;" name="entry-user-id" id="entry-user-id" value="" />
+                <div id="success-message" class="col-12" style="display:none;">
+					<label style="color:green;">Updated successfully</label>
+				</div>
+                <div class="col-12">
 					<label for="entry-name">Entry Name</label>
 					<input type="text" name="entry-name" id="entry-name" value="" />
 				</div>
@@ -12,12 +20,12 @@
 				</div>
                 <div class="col-12">
 					<label for="time-difference">Difference from GMT Time</label>
-					<input type="number" name="time-difference" id="time-difference" value="" />
+					<input type="number" name="time-difference" id="time-difference" min="-12" max="14" value="" />
 				</div>
                 <div class="col-12">
 					<ul class="actions">
-						<li><input type="submit" value="Log In" class="primary" /></li>
-						<!-- <li><input type="reset" value="Reset" /></li> -->
+						<li><input type="submit" onclick="update_timezone()" value="Update" class="primary" /></li>
+                        <li><input type="submit" onclick="delete_timezone()" value="Delete" class="" /></li>
 					</ul>
 				</div>
 			</div>

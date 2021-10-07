@@ -86,6 +86,94 @@
 			<script src="{% static 'assets/js/main.js' %}"></script>
             
             <script type="text/javascript" language="javascript">
+                
+                function update_timezone(){
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    var id = ($('#entry-id')).val();
+                    var user = ($('#entry-user-id')).val();
+                    var entry_name = ($('#entry-name')).val();
+                    var city_name = ($('#timezone-name')).val();
+                    var time_difference = ($('#time-difference')).val();
+                    $.ajax({
+                    url: "{% url 'backend:timezone-list' %}" + id + "/",  
+                    type: "PUT",
+                    xhrFields: { withCredentials: true },
+                    headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    data:{
+                        'id': id,
+                        'user':user,
+                        'name': entry_name, 
+                        'city_name':city_name,
+                        'difference_to_gmt':time_difference,
+                    },
+                    success: function updateTimezoneResponse(response) {  
+                        if(response['status']=== 401){
+                            
+                        } else {
+                            document.getElementById("success-message").style = "display:block;";
+                        }                                     
+                    }
+                    });
+                }
+                
+                function delete_timezone(){
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    var id = ($('#entry-id')).val();
+                    $.ajax({
+                    url: "{% url 'backend:timezone-list' %}" + id + "/",  
+                    type: "DELETE",
+                    xhrFields: { withCredentials: true },
+                    headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    success: function updateTimezoneResponse(response) {  
+                        switchView("timezones-section");                                     
+                    }
+                    });
+                }
+                
+                function update_timezones_list() {
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    $.ajax({
+                    url: "{% url 'backend:timezone-list' %}?format=json",  
+                    type: "GET",
+                    success: function timezonesListResponse(response) {  
+                        if(response['code']=== 401){
+                            //TODO: handle error response
+                        } else {
+                            $("#timezone-table tbody").empty();
+                            var table = $("#timezone-table-body");
+                            $.each(response, function(idx, elem){
+                                table.append("<tr><td>"+elem.name+"</td><td><a onclick=\"viewTimezone(" + elem.id + ")\">Select</a></td></tr>");
+                            });
+                        }                                     
+                    }
+                    });   
+                }
+                
+                function viewTimezone(timezoneId){
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    document.getElementById("success-message").style = "display:none;";
+                    $.ajax({
+                    url: "{% url 'backend:timezone-list' %}" + timezoneId + "?format=json",  
+                    type: "GET",
+                    success: function timezonesListResponse(response) {  
+                        if(response['code']=== 401){
+                            //TODO: handle error response
+                        } else {
+                            switchView("timezone-section");
+                            $("#entry-id").val(response.id);
+                            $("#entry-user-id").val(response.user);
+                            $("#entry-name").val(response.name);
+                            $("#timezone-name").val(response.city_name);
+                            $("#time-difference").val(response.difference_to_gmt);
+                        }                                     
+                    }
+                    });
+                }
+                
                 function switchView(sectionId){
                     // hide them all
                     document.getElementById("login-section").style = "display:none;";
@@ -96,7 +184,7 @@
                     // set the one we actually want to see to block
                     document.getElementById(sectionId).style = "display:block;";
                     if (sectionId == "timezones-section"){
-                        // TODO: update the table with an ajax call for information
+                        update_timezones_list();
                     }
                 }
                 
@@ -125,14 +213,14 @@
                     var password = ($('#password')).val();  
                     $.ajax({
                     url: "{% url 'backend:login' %}",  
-                    type: "POST", // or "get"
+                    type: "POST",
                     headers: {'X-CSRFToken': '{{ csrf_token }}'}, // for csrf token
                     data:{
                         'username': username, 
                         'password':password,
                     },
                     success: function loginResponse(response) {  
-                        if(response['code']=== 401){
+                        if(response['status']=== 401){
                             $('#login_error_div').show();
                             $("#error").text("Incorrect username or password.");
                         } else {
@@ -142,6 +230,8 @@
                     }
                     });   
                 }
+                
+                
             </script>
 
 	</body>
