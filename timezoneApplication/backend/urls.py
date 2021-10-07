@@ -9,5 +9,6 @@ app_name = "backend"
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('login', login_view, name="login")
+    path('login', login_view, name="login"),
+    path('user_id', get_user_id, name="get-user-id")
 ]

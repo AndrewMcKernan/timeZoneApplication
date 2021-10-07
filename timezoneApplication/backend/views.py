@@ -6,7 +6,7 @@ from .serializers import TimezoneSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes
 from django.contrib.auth import authenticate, login, logout
 
 # Create your views here.
@@ -35,8 +35,12 @@ class TimezoneViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, pk=None):
-        serializer = TimezoneSerializer(get_object_or_404(Timezone, pk=pk), data=request.data)
-        # TODO: ensure that user is the same as current user on the record, changing the author is not supported.
+        # do not allow author to be changed if the permissions are not correct
+        current_timezone_obj = get_object_or_404(Timezone, pk=pk)
+        #if request.data['user'] != current_timezone_obj.user:
+        #    return Response(status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = TimezoneSerializer(current_timezone_obj, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.errors, status=status.HTTP_200_OK)
@@ -61,4 +65,9 @@ def login_view(request):
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
             
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_user_id(request):
+    data = {'id':request.user.id}
+    return Response(data, status=status.HTTP_200_OK)
 # TODO: create account creation, logout, and permission modifification functions

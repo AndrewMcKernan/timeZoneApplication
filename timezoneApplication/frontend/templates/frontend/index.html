@@ -87,10 +87,46 @@
             
             <script type="text/javascript" language="javascript">
                 
+                function create_timezone(){
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    var id = ($('#entry-id')).val();
+                    var user = ($('#entry-user-id')).val();
+                    var entry_name = ($('#entry-name')).val();
+                    var city_name = ($('#timezone-name')).val();
+                    var time_difference = ($('#time-difference')).val();
+                    $.ajax({
+                    url: "{% url 'backend:timezone-list' %}",  
+                    type: "POST",
+                    xhrFields: { withCredentials: true },
+                    headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    data:{
+                        'id': id,
+                        'user':user,
+                        'name': entry_name, 
+                        'city_name':city_name,
+                        'difference_to_gmt':time_difference,
+                    },
+                    success: function updateTimezoneResponse(response) {  
+                        if(response['status']=== 401){
+                            
+                        } else {
+                            $("#submit-input").val("Update");
+                            document.getElementById("success-message").style = "display:block;";
+                        }                                     
+                    }
+                    });
+                }
+                
                 function update_timezone(){
                     event.preventDefault();
                     event.stopPropagation();  
                     var id = ($('#entry-id')).val();
+                    // kinda hacky, but if there's no ID, we should create instead.
+                    if (id == ""){
+                        create_timezone();
+                        return;
+                    }
                     var user = ($('#entry-user-id')).val();
                     var entry_name = ($('#entry-name')).val();
                     var city_name = ($('#timezone-name')).val();
@@ -152,6 +188,25 @@
                     });   
                 }
                 
+                function viewNewTimezone(){
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    document.getElementById("success-message").style = "display:none;";
+                    $.ajax({
+                    url: "{% url 'backend:get-user-id' %}?format=json",  
+                    type: "GET",
+                    success: function timezonesListResponse(response) {  
+                        if(response['code']=== 401){
+                            //TODO: handle error response
+                        } else {
+                            $("#submit-input").val("Create");
+                            switchView("timezone-section");
+                            $("#entry-user-id").val(response.id);
+                        }                                     
+                    }
+                    });
+                }
+                
                 function viewTimezone(timezoneId){
                     event.preventDefault();
                     event.stopPropagation();  
@@ -163,6 +218,7 @@
                         if(response['code']=== 401){
                             //TODO: handle error response
                         } else {
+                            $("#submit-input").val("Update");
                             switchView("timezone-section");
                             $("#entry-id").val(response.id);
                             $("#entry-user-id").val(response.user);
