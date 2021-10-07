@@ -5,6 +5,9 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register('timezone', TimezoneViewSet, basename='timezone')
 
+app_name = "backend"
+
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
+    path('login', login_view, name="login")
 ]

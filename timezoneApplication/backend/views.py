@@ -6,6 +6,8 @@ from .serializers import TimezoneSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
+from django.contrib.auth import authenticate, login, logout
 
 # Create your views here.
 
@@ -49,3 +51,13 @@ class TimezoneViewSet(viewsets.ViewSet):
         
         
 # TODO: create views for account creation (not sure how much is handled by the django_rest_framework
+
+@api_view(['POST'])
+def login_view(request):
+    if request.method == "POST":
+        user = authenticate(username=request.POST['username'], password=request.POST['password'])
+        if user is not None:
+            login(request._request, user)
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)

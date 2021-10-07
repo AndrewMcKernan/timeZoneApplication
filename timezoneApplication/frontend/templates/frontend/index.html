@@ -95,6 +95,9 @@
                     document.getElementById("user-section").style = "display:none;";
                     // set the one we actually want to see to block
                     document.getElementById(sectionId).style = "display:block;";
+                    if (sectionId == "timezones-section"){
+                        // TODO: update the table with an ajax call for information
+                    }
                 }
                 
                 function getCookie(name) {
@@ -115,6 +118,30 @@
                 // const csrftoken = getCookie('csrftoken');
                 // we need to pass the csrftoken as an X-CSRFToken header
                 // see https://stackoverflow.com/questions/26929942/django-login-with-ajax
+                function login() {
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    var username = ($('#username')).val();
+                    var password = ($('#password')).val();  
+                    $.ajax({
+                    url: "{% url 'backend:login' %}",  
+                    type: "POST", // or "get"
+                    headers: {'X-CSRFToken': '{{ csrf_token }}'}, // for csrf token
+                    data:{
+                        'username': username, 
+                        'password':password,
+                    },
+                    success: function loginResponse(response) {  
+                        if(response['code']=== 401){
+                            $('#login_error_div').show();
+                            $("#error").text("Incorrect username or password.");
+                        } else {
+                            $('#login_error_div').hide();
+                            switchView("timezones-section");
+                        }                                     
+                    }
+                    });   
+                }
             </script>
 
 	</body>
