@@ -33,20 +33,22 @@
 									</ul>
 								</header>
                             <section id="login-section">
-                            {% include 'frontend/fragments/login.html' %}
+                                {% include 'frontend/fragments/login.html' %}
 							</section>
-                            <section id="login-section" style="display:none;">
-                            {% include 'frontend/fragments/register.html' %}
+                            <section id="register-section" style="display:none;">
+                                {% include 'frontend/fragments/register.html' %}
 							</section>
                             <section id="timezones-section" style="display:none;">
-                            {% include 'frontend/fragments/timezones.html' %}
+                                {% include 'frontend/fragments/timezones.html' %}
 							</section>
                             <section id="timezone-section" style="display:none;">
-                            {% include 'frontend/fragments/timezone.html' %}
+                                {% include 'frontend/fragments/timezone.html' %}
 							</section>
                             <section id="user-section" style="display:none;">
-                            {% include 'frontend/fragments/users.html' %}
+                                {% include 'frontend/fragments/users.html' %}
 							</section>
+                        </div>
+                    </div>
                             
 
 				<!-- Sidebar -->
@@ -82,6 +84,19 @@
 			<script src="{% static 'assets/js/breakpoints.min.js' %}"></script>
 			<script src="{% static 'assets/js/util.js' %}"></script>
 			<script src="{% static 'assets/js/main.js' %}"></script>
+            
+            <script type="text/javascript" language="javascript">
+                function switchView(sectionId){
+                    // hide them all
+                    document.getElementById("login-section").style = "display:none;";
+                    document.getElementById("register-section").style = "display:none;";
+                    document.getElementById("timezones-section").style = "display:none;";
+                    document.getElementById("timezone-section").style = "display:none;";
+                    document.getElementById("user-section").style = "display:none;";
+                    // set the one we actually want to see to block
+                    document.getElementById(sectionId).style = "display:block;";
+                }
+            </script>
 
 	</body>
 </html>
