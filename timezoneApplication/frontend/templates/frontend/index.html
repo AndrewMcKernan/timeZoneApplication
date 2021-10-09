@@ -87,14 +87,58 @@
             
             <script type="text/javascript" language="javascript">
                 
+                function tick()
+                {
+                    if ($("#time-difference").html() != ''){
+                        
+                        var d = new Date();
+                        var time = d.getHours() + ':' + d.getMinutes();
+                        $("#local-time").text(time);
+                        var total_difference = parseInt($("#time-difference").html()) + d.getTimezoneOffset() / 60;
+                        $("#difference-between").text(total_difference);
+                        var otherDate = new Date(Date.now() + total_difference * 60 * 60 * 1000);
+                        var otherTime = otherDate.getHours() + ':' + otherDate.getMinutes();
+                        $("#remote-time").text(otherTime);
+                    }
+                    t = setTimeout(tick, 1000);
+                }
+                
+                $(document).ready(function(){
+                    tick();
+                })
+                
+                function get_offset_information(city_name){
+                    var city = encodeURI(city_name);
+                    $.ajax({
+                    url: "{% url 'backend:get-timezone-from-city' city_name=12345 %}".replace("12345", city),  
+                    type: "GET",
+                    xhrFields: { withCredentials: true },
+                    headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    success: function updateTimezoneResponse(response) {  
+                        if(response['status']=== 401){
+                            
+                        } else {
+                            //document.getElementById("success-message").style = "display:block;";
+                            var offset = response.gmt_offset;
+                            $("#time-difference").html(offset);
+                            $("#time-difference-div").show();
+                            $("#local-time-div").show();
+                            $("#remote-time-div").show();
+                            $("#remote-local-diff-div").show();
+                            //var now = new Date();
+                            
+                        }                                     
+                    }
+                    });
+                }
+                
                 function create_timezone(){
                     event.preventDefault();
-                    event.stopPropagation();  
+                    event.stopPropagation();
                     var id = ($('#entry-id')).val();
                     var user = ($('#entry-user-id')).val();
                     var entry_name = ($('#entry-name')).val();
                     var city_name = ($('#timezone-name')).val();
-                    var time_difference = ($('#time-difference')).val();
                     $.ajax({
                     url: "{% url 'backend:timezone-list' %}",  
                     type: "POST",
@@ -104,8 +148,7 @@
                         'id': id,
                         'user':user,
                         'name': entry_name, 
-                        'city_name':city_name,
-                        'difference_to_gmt':time_difference,
+                        'city_name':city_name
                     },
                     success: function updateTimezoneResponse(response) {  
                         if(response['status']=== 401){
@@ -113,6 +156,7 @@
                         } else {
                             $("#submit-input").val("Update");
                             document.getElementById("success-message").style = "display:block;";
+                            get_offset_information(city_name);
                         }                                     
                     }
                     });
@@ -130,7 +174,6 @@
                     var user = ($('#entry-user-id')).val();
                     var entry_name = ($('#entry-name')).val();
                     var city_name = ($('#timezone-name')).val();
-                    var time_difference = ($('#time-difference')).val();
                     $.ajax({
                     url: "{% url 'backend:timezone-list' %}" + id + "/",  
                     type: "PUT",
@@ -140,8 +183,7 @@
                         'id': id,
                         'user':user,
                         'name': entry_name, 
-                        'city_name':city_name,
-                        'difference_to_gmt':time_difference,
+                        'city_name':city_name
                     },
                     success: function updateTimezoneResponse(response) {  
                         if(response['status']=== 401){
@@ -151,6 +193,8 @@
                         }                                     
                     }
                     });
+                    //var city = encodeURI(city_name);
+                    get_offset_information(city_name);
                 }
                 
                 function delete_timezone(){
@@ -201,7 +245,15 @@
                         } else {
                             $("#submit-input").val("Create");
                             switchView("timezone-section");
+                            $("#entry-id").val("");
+                            $("#entry-name").val("");
+                            $("#timezone-name").val("");
+                            $("#time-difference").val("");
                             $("#entry-user-id").val(response.id);
+                            $("#time-difference-div").hide();
+                            $("#local-time-div").hide();
+                            $("#remote-time-div").hide();
+                            $("#remote-local-diff-div").hide();
                         }                                     
                     }
                     });
@@ -225,6 +277,8 @@
                             $("#entry-name").val(response.name);
                             $("#timezone-name").val(response.city_name);
                             $("#time-difference").val(response.difference_to_gmt);
+                            var city_name = ($('#timezone-name')).val();
+                            get_offset_information(city_name);
                         }                                     
                     }
                     });

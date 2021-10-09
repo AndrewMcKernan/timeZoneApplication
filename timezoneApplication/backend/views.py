@@ -8,6 +8,12 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, authentication_classes
 from django.contrib.auth import authenticate, login, logout
+#import requests
+#from geopy import geocoders
+from pytz import timezone
+from geopy.geocoders import Nominatim
+from timezonefinder import TimezoneFinder
+import datetime
 
 # Create your views here.
 
@@ -35,7 +41,7 @@ class TimezoneViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, pk=None):
-        # do not allow author to be changed if the permissions are not correct
+        # TODO: do not allow author to be changed if the permissions are not correct
         current_timezone_obj = get_object_or_404(Timezone, pk=pk)
         #if request.data['user'] != current_timezone_obj.user:
         #    return Response(status=status.HTTP_403_FORBIDDEN)
@@ -54,6 +60,19 @@ class TimezoneViewSet(viewsets.ViewSet):
         timezone = get_object_or_404(Timezone, pk=pk)
         timezone.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_timezone_from_city(request, city_name):
+    # first, get geo location from city name
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    location = geolocator.geocode(city_name)
+    obj = TimezoneFinder()
+    city_timezone = obj.timezone_at(lng=location.longitude, lat=location.latitude)
+    city_timezone_now = datetime.datetime.now(timezone(city_timezone))
+    gmt_offset = city_timezone_now.utcoffset().total_seconds()/60/60
+    data = {'gmt_offset':gmt_offset}
+    return Response(data=data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def login_view(request):
