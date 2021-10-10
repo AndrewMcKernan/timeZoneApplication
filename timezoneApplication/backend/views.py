@@ -118,10 +118,32 @@ def get_user_id(request):
     
 @api_view(['POST'])  
 @authentication_classes([SessionAuthentication])  
-def create_account(request, username, password):
+def create_account(request):
     new_user = User()
-    new_user.username = username
-    new_user.set_password(password)
+    new_user.username = request.POST['username']
+    # TODO: password validation
+    new_user.set_password(request.POST['password'])
     new_user.save()
     return Response(status=status.HTTP_200_OK)
-# TODO: create account creation, and permission modifification functions
+
+@api_view(['POST'])  
+@authentication_classes([SessionAuthentication])  
+def make_superuser(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    user.is_superuser = True
+    user.is_admin = True
+    user.is_superuser = True
+    user.save()
+    return Response(status=status.HTTP_200_OK)
+    
+@api_view(['GET'])  
+@authentication_classes([SessionAuthentication])
+def get_users(request):
+    # only available to superusers
+    if not request.user.is_superuser:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    users = User.objects.all()
+    data = []
+    for user in users:
+        data.append({'username':user.username, 'is_superuser':user.is_superuser, 'id':user.id})
+    return Response(data=data, status=status.HTTP_200_OK)
