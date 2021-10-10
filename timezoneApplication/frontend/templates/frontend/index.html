@@ -108,6 +108,7 @@
                 })
                 
                 function get_offset_information(city_name){
+                    $("#updating-message").show();
                     var city = encodeURI(city_name);
                     $.ajax({
                     url: "{% url 'backend:get-timezone-from-city' city_name=12345 %}".replace("12345", city),  
@@ -126,6 +127,7 @@
                             $("#remote-time-div").show();
                             $("#remote-local-diff-div").show();
                             //var now = new Date();
+                            $("#updating-message").hide();
                             
                         }                                     
                     }

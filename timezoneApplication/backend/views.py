@@ -74,6 +74,26 @@ def get_timezone_from_city(request, city_name):
     data = {'gmt_offset':gmt_offset}
     return Response(data=data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_all_timezone_info_from_cities(request, local_city_name, remote_city_name):
+    # first, get geo location from city name
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    remote_location = geolocator.geocode(remote_city_name)
+    obj = TimezoneFinder()
+    remote_city_timezone = obj.timezone_at(lng=remote_location.longitude, lat=remote_location.latitude)
+    remote_city_timezone_now = datetime.datetime.now(timezone(remote_city_timezone))
+    remote_gmt_offset = remote_city_timezone_now.utcoffset().total_seconds()/60/60
+    
+    local_location = geolocator.geocode(local_city_name)
+    local_city_timezone = obj.timezone_at(lng=local_location.longitude, lat=local_location.latitude)
+    local_city_timezone_now = datetime.datetime.now(timezone(local_city_timezone))
+    local_gmt_offset = local_city_timezone_now.utcoffset().total_seconds()/60/60
+    
+    data = {'remote_gmt_offset':remote_gmt_offset, 'local_gmt_offset':local_gmt_offset, 'remote_city_timezone_now':remote_city_timezone_now, 'local_city_timezone_now':local_city_timezone_now, 'offset_diff':remote_gmt_offset - local_gmt_offset}
+    return Response(data=data, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 def login_view(request):
     if request.method == "POST":
@@ -83,10 +103,25 @@ def login_view(request):
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+    
+@api_view(['POST'])  
+@authentication_classes([SessionAuthentication])  
+def logout_view(request):
+    logout(request.user)
+    return Response(status=status.HTTP_204_NO_CONTENT)
             
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_user_id(request):
     data = {'id':request.user.id}
     return Response(data, status=status.HTTP_200_OK)
-# TODO: create account creation, logout, and permission modifification functions
+    
+@api_view(['POST'])  
+@authentication_classes([SessionAuthentication])  
+def create_account(request, username, password):
+    new_user = User()
+    new_user.username = username
+    new_user.set_password(password)
+    new_user.save()
+    return Response(status=status.HTTP_200_OK)
+# TODO: create account creation, and permission modifification functions
