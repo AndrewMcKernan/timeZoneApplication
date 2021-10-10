@@ -6,7 +6,8 @@ from .serializers import TimezoneSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.contrib.auth import authenticate, login, logout
 #import requests
 #from geopy import geocoders
@@ -20,6 +21,7 @@ import datetime
 class TimezoneViewSet(viewsets.ViewSet):
 
     authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def list(self, request):
         # TODO: list either only the timezones we own, or all of them, depending on permissions
@@ -63,6 +65,7 @@ class TimezoneViewSet(viewsets.ViewSet):
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def get_timezone_from_city(request, city_name):
     # first, get geo location from city name
     geolocator = Nominatim(user_agent="geoapiExercises")
@@ -76,6 +79,7 @@ def get_timezone_from_city(request, city_name):
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def get_all_timezone_info_from_cities(request, local_city_name, remote_city_name):
     # first, get geo location from city name
     geolocator = Nominatim(user_agent="geoapiExercises")
@@ -106,18 +110,21 @@ def login_view(request):
     
 @api_view(['POST'])  
 @authentication_classes([SessionAuthentication])  
+@permission_classes([IsAuthenticatedOrReadOnly])
 def logout_view(request):
-    logout(request.user)
+    logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
             
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def get_user_id(request):
     data = {'id':request.user.id}
     return Response(data, status=status.HTTP_200_OK)
     
 @api_view(['POST'])  
 @authentication_classes([SessionAuthentication])  
+@permission_classes([IsAuthenticatedOrReadOnly])
 def create_account(request):
     new_user = User()
     new_user.username = request.POST['username']
@@ -128,6 +135,7 @@ def create_account(request):
 
 @api_view(['POST'])  
 @authentication_classes([SessionAuthentication])  
+@permission_classes([IsAuthenticatedOrReadOnly])
 def make_superuser(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     user.is_superuser = True
@@ -138,6 +146,7 @@ def make_superuser(request, user_id):
     
 @api_view(['GET'])  
 @authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def get_users(request):
     # only available to superusers
     if not request.user.is_superuser:

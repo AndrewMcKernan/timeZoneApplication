@@ -61,8 +61,8 @@
 										<h2>Menu</h2>
 									</header>
 									<ul>
-										<li><a href="index.html">Log Out</a></li>
-										<li><a href="generic.html">User Management</a></li>
+										<li><a href="#" onclick="logout();">Log Out</a></li>
+										<li><a href="#">User Management</a></li>
 									</ul>
 								</nav>
 
@@ -326,19 +326,44 @@
                     $.ajax({
                     url: "{% url 'backend:login' %}",  
                     type: "POST",
-                    headers: {'X-CSRFToken': '{{ csrf_token }}'}, // for csrf token
+                    headers: {'X-CSRFToken': '{{ csrf_token }}'}, // use this one for login, otherwise use the getCookie function
                     data:{
                         'username': username, 
                         'password':password,
                     },
-                    success: function loginResponse(response) {  
-                        if(response['status']=== 401){
-                            $('#login_error_div').show();
+                    statusCode: {
+                        401: function() {
+                            $('#login-error-div').show();
                             $("#error").text("Incorrect username or password.");
+                        }
+                    },
+                    success: function loginResponse(response) {  
+                        
+                        if(response['status']=== 401){
+                            
                         } else {
                             $('#login_error_div').hide();
+                            $("#username").val("");
+                            $("#password").val("");
                             switchView("timezones-section");
                         }                                     
+                    }
+                    });   
+                }
+                
+                function logout() {
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    var username = ($('#username')).val();
+                    var password = ($('#password')).val();  
+                    $.ajax({
+                    url: "{% url 'backend:logout' %}",  
+                    type: "POST",
+                    headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    xhrFields: { withCredentials: true },
+                    success: function logoutResponse(response) {  
+                        $('#login-error-div').hide();
+                        switchView("login-section");
                     }
                     });   
                 }
