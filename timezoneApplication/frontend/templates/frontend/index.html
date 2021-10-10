@@ -61,7 +61,7 @@
 										<h2>Menu</h2>
 									</header>
 									<ul>
-										<li><a href="#" onclick="logout();">Log Out</a></li>
+										<li id="logout-button" style="display:none;"><a href="#" onclick="logout();">Log Out</a></li>
 										<li><a href="#">User Management</a></li>
 									</ul>
 								</nav>
@@ -157,6 +157,7 @@
                             
                         } else {
                             $("#submit-input").val("Update");
+                            ($('#entry-id')).val(response.id);
                             document.getElementById("success-message").style = "display:block;";
                             get_offset_information(city_name);
                         }                                     
@@ -345,6 +346,7 @@
                             $('#login_error_div').hide();
                             $("#username").val("");
                             $("#password").val("");
+                            $("#logout-button").show();
                             switchView("timezones-section");
                         }                                     
                     }
@@ -363,6 +365,7 @@
                     xhrFields: { withCredentials: true },
                     success: function logoutResponse(response) {  
                         $('#login-error-div').hide();
+                        $("#logout-button").hide();
                         switchView("login-section");
                     }
                     });   
