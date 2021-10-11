@@ -93,6 +93,12 @@ def get_timezone_from_city(request, city_name):
     data = {'gmt_offset':gmt_offset}
     return Response(data=data, status=status.HTTP_200_OK)
 
+'''
+The method below is never really used. It was added for completeness sake, so that all actions (including getting the current time in a remote timezone) could be performed via the API.
+However, the client uses javascript to update the time in tandem with the browsers clock, so that the time displayed is always accurate. Using this method would only be useful
+if you needed a snapshot of the current time, but had no intention to update it. For this reason, it is also hard to test the accuracy of the timestamps, as the timestamps returned by the server will 
+almost certainly be different than the ones used by the client to compare with.
+'''
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticatedOrReadOnly])
