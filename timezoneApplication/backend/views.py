@@ -58,7 +58,7 @@ class TimezoneViewSet(viewsets.ViewSet):
         if current_timezone_obj.user != request.user.id and not request.user.is_superuser:
             return Response(status=status.HTTP_403_FORBIDDEN)
         # do not allow author to be changed if we are not a superuser
-        if str(request.POST['user']) != str(request.user.id) and not request.user.is_superuser:
+        if str(request.POST.get('user')) != str(request.user.id) and not request.user.is_superuser:
             return Response(status=status.HTTP_403_FORBIDDEN)
         
         serializer = TimezoneSerializer(current_timezone_obj, data=request.data)
@@ -129,7 +129,7 @@ def get_all_timezone_info_from_cities(request, local_city_name, remote_city_name
 @api_view(['POST'])
 def login_view(request):
     if request.method == "POST":
-        user = authenticate(username=request.POST['username'], password=request.POST['password'])
+        user = authenticate(username=request.POST.get('username'), password=request.POST.get('password'))
         if user is not None:
             login(request._request, user)
             if user.is_superuser:
@@ -158,18 +158,18 @@ def get_user_id(request):
 @api_view(['POST'])
 def create_account(request):
     new_user = User()
-    new_user.username = request.POST['username']
-    if request.POST['password'] != request.POST['confirm-password']:
+    new_user.username = request.POST.get('username')
+    if request.POST.get('password') != request.POST.get('confirm-password'):
         # they need to be the same
         return Response("The passwords do not match.", status=status.HTTP_400_BAD_REQUEST)
     try:
-        validate_password(request.POST['password'])
+        validate_password(request.POST.get('password'))
     except ValidationError as e:
         response_str = ""
         for error in e.messages:
             response_str += error + " "
         return Response(response_str, status=status.HTTP_400_BAD_REQUEST)
-    new_user.set_password(request.POST['password'])
+    new_user.set_password(request.POST.get('password'))
     try:
         new_user.save()
     except IntegrityError:

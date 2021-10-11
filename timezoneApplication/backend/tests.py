@@ -99,25 +99,74 @@ class TimezoneTests(APITestCase):
         self.assertEqual(request.json()['city_name'], 'Edmonton')
         self.assertEqual(request.json()['user'], 1)
         request = client.put('/api/timezone/1/', data={'id':1, 'name':'Test Name 2', 'city_name':'Calgary', 'user':2}, headers={'Content-Type':'application/json'})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
         request = client.get('/api/timezone/1/', headers={'Content-Type':'application/json'})
         self.assertEqual(request.json()['name'], 'Test Name 2')
         self.assertEqual(request.json()['city_name'], 'Calgary')
         self.assertEqual(request.json()['user'], 2)
         
-    def test_delete_timezone(self):
+    def test_edit_timezone_bad_request(self):
         client = APIClient()
+        
+        new_user = User()
+        new_user.username = "test2"
+        new_user.set_password("test2")
+        new_user.id = 2
+        new_user.is_superuser = True
+        new_user.save()
         
         request = client.post('/api/login', data={'username':'test', 'password':'test'})
         
         client.post('/api/timezone/', data={'name':'Test Name', 'city_name':'Edmonton', 'user':1}, format="json")
         request = client.get('/api/timezone/1/', headers={'Content-Type':'application/json'})
         self.assertEqual(request.json()['name'], 'Test Name')
-        request = client.put('/api/timezone/1/', data={'id':1, 'name':'Test Name 2', 'city_name':'Edmonton', 'user':1}, headers={'Content-Type':'application/json'})
+        self.assertEqual(request.json()['city_name'], 'Edmonton')
+        self.assertEqual(request.json()['user'], 1)
+        request = client.put('/api/timezone/1/', data={'id':1, 'name':'Test Name 2', 'city_name':'Calgary'}, headers={'Content-Type':'application/json'})
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        
+    def test_edit_timezone_nonexistant(self):
+        client = APIClient()
+        
+        new_user = User()
+        new_user.username = "test2"
+        new_user.set_password("test2")
+        new_user.id = 2
+        new_user.is_superuser = True
+        new_user.save()
+        
+        request = client.post('/api/login', data={'username':'test', 'password':'test'})
+        
+        client.post('/api/timezone/', data={'name':'Test Name', 'city_name':'Edmonton', 'user':1}, format="json")
         request = client.get('/api/timezone/1/', headers={'Content-Type':'application/json'})
-        self.assertEqual(request.json()['name'], 'Test Name 2')
+        self.assertEqual(request.json()['name'], 'Test Name')
+        self.assertEqual(request.json()['city_name'], 'Edmonton')
+        self.assertEqual(request.json()['user'], 1)
+        request = client.put('/api/timezone/3/', data={'id':1, 'name':'Test Name 2', 'city_name':'Calgary'}, headers={'Content-Type':'application/json'})
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+        
+    def test_delete_timezone(self):
+        client = APIClient()
+        
+        request = client.post('/api/login', data={'username':'test', 'password':'test'})
+        
+        request = client.post('/api/timezone/', data={'name':'Test Name', 'city_name':'Edmonton', 'user':1}, format="json")
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         request = client.delete('/api/timezone/1/')
         request = client.get('/api/timezone/1/', headers={'Content-Type':'application/json'})
-        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)        
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_nonexistant_timezone(self):
+        client = APIClient()
+        
+        request = client.post('/api/login', data={'username':'test', 'password':'test'})
+        
+        request = client.post('/api/timezone/', data={'name':'Test Name', 'city_name':'Edmonton', 'user':1}, format="json")
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        request = client.delete('/api/timezone/2/')
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+        request = client.get('/api/timezone/1/', headers={'Content-Type':'application/json'})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
         
         
 class DecoratorTests(APITestCase):
