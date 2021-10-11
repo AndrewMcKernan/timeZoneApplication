@@ -42,7 +42,10 @@ class TimezoneViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            error_string = ""
+            for error in serializer.errors:
+                error_string += error + " "
+            return Response(error_string, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, pk=None):
         timezone = get_object_or_404(Timezone, pk=pk)
@@ -63,7 +66,10 @@ class TimezoneViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.errors, status=status.HTTP_200_OK)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            error_string = ""
+            for error in serializer.errors:
+                error_string += error + " "
+            return Response(error_string, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
         pass

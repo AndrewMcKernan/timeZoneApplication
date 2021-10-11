@@ -84,7 +84,7 @@
 			<script src="{% static 'assets/js/main.js' %}"></script>
             
             <script type="text/javascript" language="javascript">
-                
+                // see https://stackoverflow.com/questions/26929942/django-login-with-ajax for csrf info
                 function tick()
                 {
                     if ($("#time-difference").html() != ''){
@@ -234,15 +234,17 @@
                         'name': entry_name, 
                         'city_name':city_name
                     },
+                    statusCode: {
+                        400: function(response) {
+                            $("#timezone-error-div").show();
+                            $("#timezone-error").text(response.responseText);
+                        }
+                    },
                     success: function updateTimezoneResponse(response) {  
-                        if(response['status']=== 401){
-                            
-                        } else {
-                            $("#submit-input").val("Update");
-                            ($('#entry-id')).val(response.id);
-                            document.getElementById("success-message").style = "display:block;";
-                            get_offset_information(city_name);
-                        }                                     
+                        $("#submit-input").val("Update");
+                        ($('#entry-id')).val(response.id);
+                        document.getElementById("success-message").style = "display:block;";
+                        get_offset_information(city_name);
                     }
                     });
                 }
@@ -270,12 +272,18 @@
                         'name': entry_name, 
                         'city_name':city_name
                     },
+                    statusCode: {
+                        400: function(response) {
+                            $("#timezone-error-div").show();
+                            $("#timezone-error").text(response.responseText);
+                        },
+                        403: function(response) {
+                            $("#timezone-error-div").show();
+                            $("#timezone-error").text("You do not have permission to perform this action.");
+                        }
+                    },
                     success: function updateTimezoneResponse(response) {  
-                        if(response['status']=== 401){
-                            
-                        } else {
-                            document.getElementById("success-message").style = "display:block;";
-                        }                                     
+                        document.getElementById("success-message").style = "display:block;";                                     
                     }
                     });
                     //var city = encodeURI(city_name);
@@ -304,15 +312,11 @@
                     url: "{% url 'backend:timezone-list' %}?format=json",  
                     type: "GET",
                     success: function timezonesListResponse(response) {  
-                        if(response['code']=== 401){
-                            //TODO: handle error response
-                        } else {
-                            $("#timezone-table tbody").empty();
-                            var table = $("#timezone-table-body");
-                            $.each(response, function(idx, elem){
-                                table.append("<tr><td>"+elem.name+"</td><td><a onclick=\"viewTimezone(" + elem.id + ")\">Select</a></td></tr>");
-                            });
-                        }                                     
+                        $("#timezone-table tbody").empty();
+                        var table = $("#timezone-table-body");
+                        $.each(response, function(idx, elem){
+                            table.append("<tr><td>"+elem.name+"</td><td><a onclick=\"viewTimezone(" + elem.id + ")\">Select</a></td></tr>");
+                        });
                     }
                     });   
                 }
@@ -323,38 +327,48 @@
                     $.ajax({
                     url: "{% url 'backend:get-users' %}",  
                     type: "GET",
+                    statusCode: {
+                        403: function(response) {
+                            $("#users-error-div").show();
+                            $("#users-error").text("You do not have permission to perform this action.");
+                        },
+                        404: function(response) {
+                            $("#users-error-div").show();
+                            $("#users-error").text("The requested resource could not be found.");
+                        }
+                    },
                     success: function timezonesListResponse(response) {  
-                        if(response['code']=== 401){
-                            //TODO: handle error response
-                        } else {
-                            $("#user-table tbody").empty();
-                            var table = $("#user-table-body");
-                            $.each(response, function(idx, elem){
-                                var checked = "";
-                                if (elem.is_superuser){
-                                    checked = "checked"
-                                }   
-                                table.append("<tr><td>"+elem.username+"</td><td><input style=\"width:20px;height=20px;-webkit-appearance:checkbox;\" id=\"checkbox" + elem.id + "\" name=\"checkbox" + elem.id + "\" type=\"checkbox\" " + checked + " onclick=\"change_permissions(" + elem.id + ")\"></input><label for=\"checkbox" + elem.id + "\"></label></td></tr>");
-                            });
-                        }                                     
+                        $("#user-table tbody").empty();
+                        var table = $("#user-table-body");
+                        $.each(response, function(idx, elem){
+                            var checked = "";
+                            if (elem.is_superuser){
+                                checked = "checked"
+                            }   
+                            table.append("<tr><td>"+elem.username+"</td><td><input style=\"width:20px;height=20px;-webkit-appearance:checkbox;\" id=\"checkbox" + elem.id + "\" name=\"checkbox" + elem.id + "\" type=\"checkbox\" " + checked + " onclick=\"change_permissions(" + elem.id + ")\"></input><label for=\"checkbox" + elem.id + "\"></label></td></tr>");
+                        });
                     }
                     });   
                 }
                 
                 function change_permissions(id){
-                    //event.preventDefault();
-                    //event.stopPropagation();  
                     $.ajax({
                     url: "{% url 'backend:make-superuser' user_id=12345 %}".replace("12345", id),  
                     type: "POST",
                     xhrFields: { withCredentials: true },
                     headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    statusCode: {
+                        403: function(response) {
+                            $("#users-error-div").show();
+                            $("#users-error").text("You do not have permission to perform this action. You cannot modify your own permissions.");
+                        },
+                        404: function(response) {
+                            $("#users-error-div").show();
+                            $("#users-error").text("The requested user could not be found.");
+                        }
+                    },
                     success: function timezonesListResponse(response) {  
-                        if(response['code']=== 401){
-                            //TODO: handle error response
-                        } else {
-                            // What do we do here? 
-                        }                                     
+                        // we do not need to perform any actions on a success.                       
                     }
                     });
                 }
@@ -366,22 +380,24 @@
                     $.ajax({
                     url: "{% url 'backend:get-user-id' %}?format=json",  
                     type: "GET",
+                    statusCode: {
+                        404: function(response) {
+                            $("#timezone-error-div").show();
+                            $("#timezone-error").text("The requested timezone could not be found.");
+                        }
+                    },
                     success: function timezonesListResponse(response) {  
-                        if(response['code']=== 401){
-                            //TODO: handle error response
-                        } else {
-                            $("#submit-input").val("Create");
-                            switchView("timezone-section");
-                            $("#entry-id").val("");
-                            $("#entry-name").val("");
-                            $("#timezone-name").val("");
-                            $("#time-difference").val("");
-                            $("#entry-user-id").val(response.id);
-                            $("#time-difference-div").hide();
-                            $("#local-time-div").hide();
-                            $("#remote-time-div").hide();
-                            $("#remote-local-diff-div").hide();
-                        }                                     
+                        $("#submit-input").val("Create");
+                        switchView("timezone-section");
+                        $("#entry-id").val("");
+                        $("#entry-name").val("");
+                        $("#timezone-name").val("");
+                        $("#time-difference").val("");
+                        $("#entry-user-id").val(response.id);
+                        $("#time-difference-div").hide();
+                        $("#local-time-div").hide();
+                        $("#remote-time-div").hide();
+                        $("#remote-local-diff-div").hide();
                     }
                     });
                 }
@@ -393,20 +409,22 @@
                     $.ajax({
                     url: "{% url 'backend:timezone-list' %}" + timezoneId + "?format=json",  
                     type: "GET",
+                    statusCode: {
+                        404: function(response) {
+                            $("#timezone-error-div").show();
+                            $("#timezone-error").text("The requested timezone could not be found.");
+                        }
+                    },
                     success: function timezonesListResponse(response) {  
-                        if(response['code']=== 401){
-                            //TODO: handle error response
-                        } else {
-                            $("#submit-input").val("Update");
-                            switchView("timezone-section");
-                            $("#entry-id").val(response.id);
-                            $("#entry-user-id").val(response.user);
-                            $("#entry-name").val(response.name);
-                            $("#timezone-name").val(response.city_name);
-                            $("#time-difference").val(response.difference_to_gmt);
-                            var city_name = ($('#timezone-name')).val();
-                            get_offset_information(city_name);
-                        }                                     
+                        $("#submit-input").val("Update");
+                        switchView("timezone-section");
+                        $("#entry-id").val(response.id);
+                        $("#entry-user-id").val(response.user);
+                        $("#entry-name").val(response.name);
+                        $("#timezone-name").val(response.city_name);
+                        $("#time-difference").val(response.difference_to_gmt);
+                        var city_name = ($('#timezone-name')).val();
+                        get_offset_information(city_name);
                     }
                     });
                 }
@@ -450,6 +468,8 @@
                     if (sectionId == "user-section"){
                         $('#users-message-div').hide();
                         $('#users-message').text('')
+                        $('#users-error-div').hide();
+                        $('#users-error').text('')
                         update_users_list();
                     }
                 }
@@ -469,9 +489,7 @@
                     }
                     return cookieValue;
                 }
-                // const csrftoken = getCookie('csrftoken');
-                // we need to pass the csrftoken as an X-CSRFToken header
-                // see https://stackoverflow.com/questions/26929942/django-login-with-ajax
+                
                 function login() {
                     event.preventDefault();
                     event.stopPropagation();  
