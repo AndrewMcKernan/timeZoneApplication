@@ -330,7 +330,7 @@
                         $("#timezone-table tbody").empty();
                         var table = $("#timezone-table-body");
                         $.each(response, function(idx, elem){
-                            table.append("<tr><td>"+elem.name+"</td><td><a onclick=\"viewTimezone(" + elem.id + ")\">Select</a></td></tr>");
+                            table.append("<tr><td>"+elem.name+"</td><td><a href=\"#\" onclick=\"viewTimezone(" + elem.id + ")\">Select</a></td></tr>");
                         });
                     }
                     });   
@@ -530,6 +530,8 @@
                         $("#admin-register-username").val('');
                         $("#admin-register-password").val('');
                         $("#admin-confirm-register-password").val('');
+                        $("#admin-register-error-div").hide();
+                        $("#admin-register-error").val('');
                     }
                     if (sectionId == "timezones-section"){
                         update_timezones_list();
