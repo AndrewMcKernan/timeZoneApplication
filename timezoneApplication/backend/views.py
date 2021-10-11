@@ -9,12 +9,16 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 #import requests
 #from geopy import geocoders
 from pytz import timezone
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 import datetime
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 
 # Create your views here.
 
@@ -24,8 +28,11 @@ class TimezoneViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def list(self, request):
-        # TODO: list either only the timezones we own, or all of them, depending on permissions
-        timezones = Timezone.objects.all()
+        # list either only the timezones we own, or all of them, depending on permissions
+        if request.user.is_superuser:
+            timezones = Timezone.objects.all()
+        else:
+            timezones = Timezone.objects.filter(user=request.user.id)
         serializer = TimezoneSerializer(timezones, many=True)
         return Response(serializer.data)
 
@@ -43,10 +50,13 @@ class TimezoneViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, pk=None):
-        # TODO: do not allow author to be changed if the permissions are not correct
+        # do not allow modification of a timezone belonging to someone else if we are not a superuser
         current_timezone_obj = get_object_or_404(Timezone, pk=pk)
-        #if request.data['user'] != current_timezone_obj.user:
-        #    return Response(status=status.HTTP_403_FORBIDDEN)
+        if current_timezone_obj.user != request.user.id and not request.user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        # do not allow author to be changed if we are not a superuser
+        if str(request.POST['user']) != str(request.user.id) and not request.user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         
         serializer = TimezoneSerializer(current_timezone_obj, data=request.data)
         if serializer.is_valid():
@@ -68,8 +78,11 @@ class TimezoneViewSet(viewsets.ViewSet):
 @permission_classes([IsAuthenticatedOrReadOnly])
 def get_timezone_from_city(request, city_name):
     # first, get geo location from city name
-    geolocator = Nominatim(user_agent="geoapiExercises")
+    geolocator = Nominatim(user_agent="timezoneToptalApplication")
     location = geolocator.geocode(city_name)
+    if location is None:
+        # there is no location matching the inputted string
+        return Response("No location matches the inputted name.", status=status.HTTP_400_BAD_REQUEST)
     obj = TimezoneFinder()
     city_timezone = obj.timezone_at(lng=location.longitude, lat=location.latitude)
     city_timezone_now = datetime.datetime.now(timezone(city_timezone))
@@ -82,7 +95,7 @@ def get_timezone_from_city(request, city_name):
 @permission_classes([IsAuthenticatedOrReadOnly])
 def get_all_timezone_info_from_cities(request, local_city_name, remote_city_name):
     # first, get geo location from city name
-    geolocator = Nominatim(user_agent="geoapiExercises")
+    geolocator = Nominatim(user_agent="timezoneToptalApplication")
     remote_location = geolocator.geocode(remote_city_name)
     obj = TimezoneFinder()
     remote_city_timezone = obj.timezone_at(lng=remote_location.longitude, lat=remote_location.latitude)
@@ -104,7 +117,12 @@ def login_view(request):
         user = authenticate(username=request.POST['username'], password=request.POST['password'])
         if user is not None:
             login(request._request, user)
-            return Response(status=status.HTTP_200_OK)
+            if user.is_superuser:
+                data = {'is_superuser':'True'}
+                return Response(data=data, status=status.HTTP_200_OK)
+            else:
+                data = {'is_superuser':'False'}
+                return Response(data=data, status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
     
@@ -122,26 +140,45 @@ def get_user_id(request):
     data = {'id':request.user.id}
     return Response(data, status=status.HTTP_200_OK)
     
-@api_view(['POST'])  
-@authentication_classes([SessionAuthentication])  
-@permission_classes([IsAuthenticatedOrReadOnly])
+@api_view(['POST'])
 def create_account(request):
     new_user = User()
     new_user.username = request.POST['username']
-    # TODO: password validation
+    if request.POST['password'] != request.POST['confirm-password']:
+        # they need to be the same
+        return Response("The passwords do not match.", status=status.HTTP_400_BAD_REQUEST)
+    try:
+        validate_password(request.POST['password'])
+    except ValidationError as e:
+        response_str = ""
+        for error in e.messages:
+            response_str += error + " "
+        return Response(response_str, status=status.HTTP_400_BAD_REQUEST)
     new_user.set_password(request.POST['password'])
-    new_user.save()
+    try:
+        new_user.save()
+    except IntegrityError:
+        return Response("A user with this username already exists", status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST'])  
 @authentication_classes([SessionAuthentication])  
 @permission_classes([IsAuthenticatedOrReadOnly])
 def make_superuser(request, user_id):
+    if request.user.id == user_id:
+        # do not allow them to modify themselves
+        return Response(status=status.HTTP_403_FORBIDDEN)
     user = get_object_or_404(User, pk=user_id)
-    user.is_superuser = True
-    user.is_admin = True
-    user.is_superuser = True
-    user.save()
+    if user.is_superuser:
+        user.is_superuser = False
+        user.is_admin = False
+        user.is_superuser = False
+        user.save()
+    else:
+        user.is_superuser = True
+        user.is_admin = True
+        user.is_superuser = True
+        user.save()
     return Response(status=status.HTTP_200_OK)
     
 @api_view(['GET'])  
@@ -151,7 +188,8 @@ def get_users(request):
     # only available to superusers
     if not request.user.is_superuser:
         return Response(status=status.HTTP_403_FORBIDDEN)
-    users = User.objects.all()
+    # do not include the user that we are, since we should not modify our own permissions
+    users = User.objects.exclude(pk=request.user.id)
     data = []
     for user in users:
         data.append({'username':user.username, 'is_superuser':user.is_superuser, 'id':user.id})

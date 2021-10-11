@@ -3,25 +3,31 @@
         <form method="post" action="#">
         
 			<div class="row gtr-uniform">
-				<div class="col-12">
+                <div class="col-12" >
+                    <h2>Register</h2>
+                </div>
+				<div id="register-error-div"  class="col-12">
+					<span id="register-error" style="color:red;"></span>
+				</div>
+                <div class="col-12">
 					<label for="username">Username</label>
-					<input type="text" name="username" id="username" value="" />
+					<input type="text" name="register-username" id="register-username" value="" />
 				</div>
 				<div class="col-12">
 					<label for="password">Password</label>
-					<input type="password" name="password" id="password" value="" />
+					<input type="password" name="register-password" id="register-password" value="" />
 				</div>
                 <div class="col-12">
 					<label for="confirm-password">Confirm Password</label>
-					<input type="password" name="confirm-password" id="confirm-password" value="" />
+					<input type="password" name="confirm-register-password" id="confirm-register-password" value="" />
 				</div>
                 <div class="col-12">
 					<ul class="actions">
-						<li><input type="submit" value="Register" class="primary" /></li>
+						<li><input type="submit" onclick="anonymous_register();" value="Register" class="primary" /></li>
 						<!-- <li><input type="reset" value="Reset" /></li> -->
 					</ul>
 				</div>
 			</div>
 		</form>
-        <a href="#" onclick="switchView('login-section')">Return to Log In</a>
+        <a href="#" id="return-to-login-anon" onclick="switchView('login-section')">Return to Log In</a>
     </div>

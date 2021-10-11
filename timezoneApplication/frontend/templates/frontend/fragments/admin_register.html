@@ -1,0 +1,37 @@
+
+<div>
+    <div class="row gtr-uniform">
+        <div class="col-12" >
+            <button onclick="switchView('user-section')">Back</button>
+        </div>
+    </div>
+    <form method="post" action="#">
+    
+		<div class="row gtr-uniform">
+            <div class="col-12" >
+                <h2>Create New User</h2>
+            </div>
+			<div id="admin-register-error-div"  class="col-12">
+				<span id="admin-register-error" style="color:red;"></span>
+			</div>
+            <div class="col-12">
+				<label for="username">Username</label>
+				<input type="text" name="admin-register-username" id="admin-register-username" value="" />
+			</div>
+			<div class="col-12">
+				<label for="password">Password</label>
+				<input type="password" name="admin-register-password" id="admin-register-password" value="" />
+			</div>
+            <div class="col-12">
+				<label for="confirm-password">Confirm Password</label>
+				<input type="password" name="admin-confirm-register-password" id="admin-confirm-register-password" value="" />
+			</div>
+            <div class="col-12">
+				<ul class="actions">
+					<li><input type="submit" href="#" onclick="admin_register();" value="Register" class="primary" /></li>
+					<!-- <li><input type="reset" value="Reset" /></li> -->
+				</ul>
+			</div>
+		</div>
+	</form>
+</div>

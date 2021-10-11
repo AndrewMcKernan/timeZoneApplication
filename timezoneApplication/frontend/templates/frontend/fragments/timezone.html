@@ -1,9 +1,14 @@
     <div>
+        <div class="col-12" >
+            <h2>Timezone</h2>
+        </div>
+        <br/>
+        <br/>
         <div class="col-12">
-                    <button onclick="switchView('timezones-section')">Back</button>
-                </div>
-                <br/>
-                <br/>
+            <button onclick="switchView('timezones-section')">Back</button>
+        </div>
+        <br/>
+        <br/>
         <form method="post" action="#">
             
 			<div class="row gtr-uniform">
@@ -16,12 +21,15 @@
                 <div id="updating-message" class="col-12" style="display:none;">
 					<label style="color:green;">Getting timezone information...</label>
 				</div>
+                <div id="timezone-error-div" class="col-12" style="display:none;">
+					<span id="timezone-error" style="color:red;"></span>
+				</div>
                 <div class="col-12">
 					<label for="entry-name">Entry Name</label>
 					<input type="text" name="entry-name" id="entry-name" value="" />
 				</div>
 				<div class="col-12">
-					<label for="timezone-name">Timezone Name</label>
+					<label for="timezone-name">Location Name</label>
 					<input type="text" name="timezone-name" id="timezone-name" value="" />
 				</div>
                 <div class="col-12" id="time-difference-div" style="display:none;">

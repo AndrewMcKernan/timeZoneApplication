@@ -23,13 +23,8 @@
 
 							<!-- Header -->
 								<header id="header">
-									<a href="index.html" class="logo"><strong>Timezone</strong> Manager</a>
+									<a href="#" onclick="switchView('login-section')" class="logo"><strong>Timezone</strong> Manager</a>
 									<ul class="icons">
-										<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-										<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-										<li><a href="#" class="icon brands fa-snapchat-ghost"><span class="label">Snapchat</span></a></li>
-										<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-										<li><a href="#" class="icon brands fa-medium-m"><span class="label">Medium</span></a></li>
 									</ul>
 								</header>
                             <section id="login-section">
@@ -37,6 +32,9 @@
 							</section>
                             <section id="register-section" style="display:none;">
                                 {% include 'frontend/fragments/register.html' %}
+							</section>
+                            <section id="admin-register-section" style="display:none;">
+                                {% include 'frontend/fragments/admin_register.html' %}
 							</section>
                             <section id="timezones-section" style="display:none;">
                                 {% include 'frontend/fragments/timezones.html' %}
@@ -62,7 +60,7 @@
 									</header>
 									<ul>
 										<li id="logout-button" style="display:none;"><a href="#" onclick="logout();">Log Out</a></li>
-										<li><a href="#">User Management</a></li>
+										<li id="user-management-button" style="display:none;"><a onclick="switchView('user-section')" href="#">User Management</a></li>
 									</ul>
 								</nav>
 
@@ -92,12 +90,20 @@
                     if ($("#time-difference").html() != ''){
                         
                         var d = new Date();
-                        var time = d.getHours() + ':' + d.getMinutes();
+                        var mins = d.getMinutes().toString();
+                        if (mins.length < 2){
+                            mins = '0' + mins
+                        }
+                        var time = d.getHours() + ':' + mins;
                         $("#local-time").text(time);
                         var total_difference = parseInt($("#time-difference").html()) + d.getTimezoneOffset() / 60;
                         $("#difference-between").text(total_difference);
                         var otherDate = new Date(Date.now() + total_difference * 60 * 60 * 1000);
-                        var otherTime = otherDate.getHours() + ':' + otherDate.getMinutes();
+                        var mins = otherDate.getMinutes().toString();
+                        if (mins.length < 2){
+                            mins = '0' + mins
+                        }
+                        var otherTime = otherDate.getHours() + ':' + mins;
                         $("#remote-time").text(otherTime);
                     }
                     t = setTimeout(tick, 1000);
@@ -115,23 +121,99 @@
                     type: "GET",
                     xhrFields: { withCredentials: true },
                     headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    statusCode: {
+                        400: function(response) {
+                            $('#updating-message').hide();
+                            $('#success-message').hide();
+                            $("#local-time-div").hide();
+                            $("#remote-time-div").hide();
+                            $("#remote-local-diff-div").hide();
+                            $("#time-difference-div").hide();
+                            $('#timezone-error-div').show();
+                            $('#timezone-error').text(response.responseText);
+                        }
+                    },
                     success: function updateTimezoneResponse(response) {  
-                        if(response['status']=== 401){
-                            
-                        } else {
-                            //document.getElementById("success-message").style = "display:block;";
-                            var offset = response.gmt_offset;
-                            $("#time-difference").html(offset);
-                            $("#time-difference-div").show();
-                            $("#local-time-div").show();
-                            $("#remote-time-div").show();
-                            $("#remote-local-diff-div").show();
-                            //var now = new Date();
-                            $("#updating-message").hide();
-                            
-                        }                                     
+                        $('#timezone-error-div').hide();
+                        var offset = response.gmt_offset;
+                        $("#time-difference").html(offset);
+                        $("#time-difference-div").show();
+                        $("#local-time-div").show();
+                        $("#remote-time-div").show();
+                        $("#remote-local-diff-div").show();
+                        $("#updating-message").hide();
                     }
                     });
+                }
+                
+                function create_account(isAnon){
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (isAnon){
+                        var username = $("#register-username").val();
+                        var password = $("#register-password").val();
+                        var confirm_password = $("#confirm-register-password").val();
+                        
+                        $.ajax({
+                        url: "{% url 'backend:create-account' %}",  
+                        type: "POST",
+                        xhrFields: { withCredentials: true },
+                        headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                        data:{
+                            'username': username,
+                            'password': password,
+                            'confirm-password': confirm_password
+                        },
+                        statusCode: {
+                            400: function(response) {
+                                $('#register-error-div').show();
+                                $('#register-error').text(response.responseText);
+                            }
+                        },
+                        success: function anonCreateAccountResponse(response) {
+                            switchView('login-section');
+                            $('#login-message-div').show();
+                            $('#login-message').text('Account created.')
+                        }
+                        });
+                    }
+                    else{
+                        var username = $("#admin-register-username").val();
+                        var password = $("#admin-register-password").val();
+                        var confirm_password = $("#admin-confirm-register-password").val();
+                        
+                        $.ajax({
+                        url: "{% url 'backend:create-account' %}",  
+                        type: "POST",
+                        xhrFields: { withCredentials: true },
+                        headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                        data:{
+                            'username': username,
+                            'password': password,
+                            'confirm-password': confirm_password
+                        },
+                        statusCode: {
+                            400: function(response) {
+                                $('#admin-register-error-div').show();
+                                $('#admin-register-error').text(response.responseText);
+                            }
+                        },
+                        success: function anonCreateAccountResponse(response) {
+                            switchView('user-section');
+                            $('#users-message-div').show();
+                            $('#users-message').text('Account created.')
+                        }
+                        });
+                        
+                    }
+                }
+                
+                function anonymous_register(){
+                    create_account(true);
+                }
+                
+                function admin_register(){
+                    create_account(false);
                 }
                 
                 function create_timezone(){
@@ -235,6 +317,48 @@
                     });   
                 }
                 
+                function update_users_list() {
+                    event.preventDefault();
+                    event.stopPropagation();  
+                    $.ajax({
+                    url: "{% url 'backend:get-users' %}",  
+                    type: "GET",
+                    success: function timezonesListResponse(response) {  
+                        if(response['code']=== 401){
+                            //TODO: handle error response
+                        } else {
+                            $("#user-table tbody").empty();
+                            var table = $("#user-table-body");
+                            $.each(response, function(idx, elem){
+                                var checked = "";
+                                if (elem.is_superuser){
+                                    checked = "checked"
+                                }   
+                                table.append("<tr><td>"+elem.username+"</td><td><input style=\"width:20px;height=20px;-webkit-appearance:checkbox;\" id=\"checkbox" + elem.id + "\" name=\"checkbox" + elem.id + "\" type=\"checkbox\" " + checked + " onclick=\"change_permissions(" + elem.id + ")\"></input><label for=\"checkbox" + elem.id + "\"></label></td></tr>");
+                            });
+                        }                                     
+                    }
+                    });   
+                }
+                
+                function change_permissions(id){
+                    //event.preventDefault();
+                    //event.stopPropagation();  
+                    $.ajax({
+                    url: "{% url 'backend:make-superuser' user_id=12345 %}".replace("12345", id),  
+                    type: "POST",
+                    xhrFields: { withCredentials: true },
+                    headers: {'X-CSRFToken': getCookie('csrftoken')}, // for csrf token
+                    success: function timezonesListResponse(response) {  
+                        if(response['code']=== 401){
+                            //TODO: handle error response
+                        } else {
+                            // What do we do here? 
+                        }                                     
+                    }
+                    });
+                }
+                
                 function viewNewTimezone(){
                     event.preventDefault();
                     event.stopPropagation();  
@@ -291,13 +415,42 @@
                     // hide them all
                     document.getElementById("login-section").style = "display:none;";
                     document.getElementById("register-section").style = "display:none;";
+                    document.getElementById("admin-register-section").style = "display:none;";
                     document.getElementById("timezones-section").style = "display:none;";
                     document.getElementById("timezone-section").style = "display:none;";
                     document.getElementById("user-section").style = "display:none;";
                     // set the one we actually want to see to block
                     document.getElementById(sectionId).style = "display:block;";
+                    if (sectionId == "login-section"){
+                        $("#username").val('');
+                        $("#password").val('');
+                        $("#timezone-table tbody").empty();
+                        $("#user-table tbody").empty();
+                        $("#login-message").text('');
+                        $("#login-message-div").hide();
+                    }
+                    if (sectionId == "register-section"){
+                        $("#register-username").val('');
+                        $("#register-password").val('');
+                        $("#confirm-register-password").val('');
+                    }
+                    if (sectionId == "admin-register-section"){
+                        $("#admin-register-username").val('');
+                        $("#admin-register-password").val('');
+                        $("#admin-confirm-register-password").val('');
+                    }
                     if (sectionId == "timezones-section"){
                         update_timezones_list();
+                    }
+                    if (sectionId == "timezone-section"){
+                        $('#timezone-error-div').hide();
+                        $('#updating-message').hide();
+                        $('#success-message').hide();
+                    }
+                    if (sectionId == "user-section"){
+                        $('#users-message-div').hide();
+                        $('#users-message').text('')
+                        update_users_list();
                     }
                 }
                 
@@ -339,16 +492,17 @@
                         }
                     },
                     success: function loginResponse(response) {  
-                        
-                        if(response['status']=== 401){
-                            
-                        } else {
-                            $('#login_error_div').hide();
-                            $("#username").val("");
-                            $("#password").val("");
-                            $("#logout-button").show();
-                            switchView("timezones-section");
-                        }                                     
+                        if (response.is_superuser == "True"){
+                            $("#user-management-button").show();
+                        }
+                        else{
+                            $("#user-management-button").hide();
+                        }
+                        $('#login_error_div').hide();
+                        $("#username").val("");
+                        $("#password").val("");
+                        $("#logout-button").show();
+                        switchView("timezones-section");
                     }
                     });   
                 }
@@ -366,6 +520,7 @@
                     success: function logoutResponse(response) {  
                         $('#login-error-div').hide();
                         $("#logout-button").hide();
+                        $("#user-management-button").hide();
                         switchView("login-section");
                     }
                     });   

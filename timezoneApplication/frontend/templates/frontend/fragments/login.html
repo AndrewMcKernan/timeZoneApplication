@@ -3,8 +3,14 @@
         <form method="post" action="#">
         
 			<div class="row gtr-uniform">
+                <div class="col-12" >
+                    <h2>Login</h2>
+                </div>
                 <div id="login-error-div" class="col-12" style="display: none;">
                     <span style="color:red;" id="error"></span>
+                </div>
+                <div id="login-message-div" class="col-12" style="display: none;">
+                    <span style="color:green;" id="login-message"></span>
                 </div>
 				<div class="col-12">
 					<label for="username">Username</label>
@@ -22,5 +28,5 @@
 				</div>
 			</div>
 		</form>
-        <a href="#" <a href="#" onclick="switchView('register-section')">Create New Account</a>
+        <a href="#" onclick="switchView('register-section')">Create New Account</a>
     </div>
