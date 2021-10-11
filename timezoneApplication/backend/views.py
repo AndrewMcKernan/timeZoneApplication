@@ -177,6 +177,7 @@ def make_superuser(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if user.is_superuser:
         user.is_superuser = False
+        user.is_staff = False
         user.is_admin = False
         user.is_superuser = False
         user.save()
@@ -184,6 +185,7 @@ def make_superuser(request, user_id):
         user.is_superuser = True
         user.is_admin = True
         user.is_superuser = True
+        user.is_staff = True
         user.save()
     return Response(status=status.HTTP_200_OK)
     
@@ -196,6 +198,20 @@ def get_users(request):
         return Response(status=status.HTTP_403_FORBIDDEN)
     # do not include the user that we are, since we should not modify our own permissions
     users = User.objects.exclude(pk=request.user.id)
+    data = []
+    for user in users:
+        data.append({'username':user.username, 'is_superuser':user.is_superuser, 'id':user.id})
+    return Response(data=data, status=status.HTTP_200_OK)
+    
+@api_view(['GET'])  
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticatedOrReadOnly])
+def get_authors(request):
+    # only available to superusers
+    if not request.user.is_superuser:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    # include the user that we are - this is for the purpose of selecting an author.
+    users = User.objects.all()
     data = []
     for user in users:
         data.append({'username':user.username, 'is_superuser':user.is_superuser, 'id':user.id})

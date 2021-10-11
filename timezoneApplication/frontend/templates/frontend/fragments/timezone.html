@@ -13,8 +13,8 @@
             
 			<div class="row gtr-uniform">
 				
-                <input readonly type="text" style="display:none;" name="entry-id" id="entry-id" value="" />
-                <input readonly type="text" style="display:none;" name="entry-user-id" id="entry-user-id" value="" />
+                <input type="text" style="display:none;" name="entry-id" id="entry-id" value="" />
+                <input type="text" style="display:none;" name="entry-user-id" id="entry-user-id" value="" />
                 <div id="success-message" class="col-12" style="display:none;">
 					<label style="color:green;">Updated successfully</label>
 				</div>
@@ -32,25 +32,27 @@
 					<label for="timezone-name">Location Name</label>
 					<input type="text" name="timezone-name" id="timezone-name" value="" />
 				</div>
+                <div id="user-select-div" class="col-12" style="display:none;">
+					<label for="user-select">Author</label>
+					<select type="text" name="user-select" id="user-select">
+                        
+                    </select>
+				</div>
                 <div class="col-12" id="time-difference-div" style="display:none;">
 					<label for="time-difference">Difference from GMT Time</label>
                     <span id="time-difference"></span>
-					<!-- <input readonly type="text" name="time-difference" id="time-difference" value="" /> -->
 				</div>
                 <div class="col-12" id="remote-time-div" style="display:none;">
 					<label for="remote-time">Time In Given Timezone</label>
                     <span id="remote-time"></span>
-					<!-- <input readonly type="text" name="remote-time" id="remote-time" value="" /> -->
 				</div>
                 <div class="col-12" id="local-time-div" style="display:none;">
 					<label for="local-time">Local Time</label>
                     <span id="local-time"></label>
-					<!-- <input readonly type="text" name="local-time" id="local-time" value="" /> -->
 				</div>
                 <div class="col-12" id="remote-local-diff-div" style="display:none;">
 					<label for="difference-between">Difference Between Local and Selected Time</label>
                     <span id="difference-between"></span>
-					<!-- <input readonly type="text" name="difference-between" id="difference-between" value="" /> -->
 				</div>
                 <div class="col-12">
 					<ul class="actions">

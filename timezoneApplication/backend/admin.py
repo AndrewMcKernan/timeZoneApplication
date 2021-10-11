@@ -5,6 +5,6 @@ from django.contrib import admin
 from .models import Timezone
 
 class TimezoneAdmin(admin.ModelAdmin):
-    fields = ['name', 'city_name', 'difference_to_gmt', 'user']
+    fields = ['name', 'city_name', 'user']
     
 admin.site.register(Timezone, TimezoneAdmin)

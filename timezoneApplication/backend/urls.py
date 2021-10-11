@@ -13,6 +13,7 @@ urlpatterns = [
     path('logout', logout_view, name="logout"),
     path('user-id', get_user_id, name="get-user-id"),
     path('users', get_users, name="get-users"),
+    path('authors', get_authors, name="get-authors"),
     path('create-account', create_account, name="create-account"),
     path('make-superuser/<int:user_id>/', make_superuser, name="make-superuser"),
     path('timezone-info/<str:city_name>', get_timezone_from_city, name="get-timezone-from-city"),
