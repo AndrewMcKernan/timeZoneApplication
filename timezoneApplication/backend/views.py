@@ -71,9 +71,6 @@ class TimezoneViewSet(viewsets.ViewSet):
                 error_string += error + " "
             return Response(error_string, status=status.HTTP_400_BAD_REQUEST)
 
-    def partial_update(self, request, pk=None):
-        pass
-
     def destroy(self, request, pk=None):
         timezone = get_object_or_404(Timezone, pk=pk)
         timezone.delete()
@@ -103,12 +100,18 @@ def get_all_timezone_info_from_cities(request, local_city_name, remote_city_name
     # first, get geo location from city name
     geolocator = Nominatim(user_agent="timezoneToptalApplication")
     remote_location = geolocator.geocode(remote_city_name)
+    if remote_location is None:
+        # there is no location matching the inputted string
+        return Response("No location matches the inputted name.", status=status.HTTP_400_BAD_REQUEST)
     obj = TimezoneFinder()
     remote_city_timezone = obj.timezone_at(lng=remote_location.longitude, lat=remote_location.latitude)
     remote_city_timezone_now = datetime.datetime.now(timezone(remote_city_timezone))
     remote_gmt_offset = remote_city_timezone_now.utcoffset().total_seconds()/60/60
     
     local_location = geolocator.geocode(local_city_name)
+    if local_location is None:
+        # there is no location matching the inputted string
+        return Response("No location matches the inputted name.", status=status.HTTP_400_BAD_REQUEST)
     local_city_timezone = obj.timezone_at(lng=local_location.longitude, lat=local_location.latitude)
     local_city_timezone_now = datetime.datetime.now(timezone(local_city_timezone))
     local_gmt_offset = local_city_timezone_now.utcoffset().total_seconds()/60/60
@@ -165,7 +168,7 @@ def create_account(request):
         new_user.save()
     except IntegrityError:
         return Response("A user with this username already exists", status=status.HTTP_400_BAD_REQUEST)
-    return Response(status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])  
 @authentication_classes([SessionAuthentication])  
@@ -173,6 +176,8 @@ def create_account(request):
 def make_superuser(request, user_id):
     if request.user.id == user_id:
         # do not allow them to modify themselves
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    if not request.user.is_superuser:
         return Response(status=status.HTTP_403_FORBIDDEN)
     user = get_object_or_404(User, pk=user_id)
     if user.is_superuser:
