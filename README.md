@@ -1,1 +1,1 @@
-Created this readme for an initial commit. Will update as we go.
+A simple django application for testing the Django Rest Framework. 
